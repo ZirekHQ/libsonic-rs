@@ -17,3 +17,5 @@ out = stream.read(stream.available_frames())
 ```
 
 `write` drops a trailing partial frame. `SonicStream(rate, channels)` raises `ValueError` for out-of-range dimensions.
+
+Wheels are abi3 and cover CPython 3.11 and later.
