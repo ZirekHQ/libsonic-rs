@@ -49,5 +49,12 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --only-binary :all: pytest==9.1.1
-          python -m pip install --no-index --no-deps --find-links python/dist libsonic
+          req="$RUNNER_TEMP/wheel-requirement.txt"
+          python - "$req" <<'PY'
+          import hashlib, pathlib, sys
+          (whl,) = pathlib.Path("python/dist").glob("*.whl")
+          digest = hashlib.sha256(whl.read_bytes()).hexdigest()
+          pathlib.Path(sys.argv[1]).write_text(f"{whl.resolve().as_uri()} --hash=sha256:{digest}\n")
+          PY
+          python -m pip install --require-hashes --no-index --no-deps --only-binary :all: -r "$req"
           python -m pytest python/tests
