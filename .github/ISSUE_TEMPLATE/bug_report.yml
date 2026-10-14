@@ -1,0 +1,25 @@
+name: Bug report
+description: Output differs from Sonic, or the library panics or misbehaves.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: linsonic version
+      placeholder: e.g. 0.1.0 / commit abc1234
+    validations:
+      required: true
+  - type: textarea
+    id: parameters
+    attributes:
+      label: Parameters
+      description: Sample rate, channels, speed, pitch, volume and how the audio was written (chunk sizes, flush).
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      description: If this is a parity bug, include the output of the C Sonic for the same input.
+    validations:
+      required: true

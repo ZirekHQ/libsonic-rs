@@ -1,0 +1,114 @@
+name: Release
+
+# Only acts on the commit landing prepare-release.yml's version-bump PR (matched by its exact
+# commit subject). Every other push to main is a no-op here.
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  tag-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: >-
+      startsWith(github.event.head_commit.message, 'chore: bump version -> ')
+    permissions:
+      contents: write
+      pull-requests: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        run: |
+          set -euo pipefail
+          version="$(awk '/^\[package\]/{f=1;next} /^\[/{f=0} f && /^version = /{gsub(/version = "|"/,""); print; exit}' Cargo.toml)"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Require the merged PR to be the version-bump PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          heads="$(gh api "repos/${REPO}/commits/${GITHUB_SHA}/pulls" \
+            --jq '.[] | select(.merged_at != null and .head.repo.full_name == "'"${REPO}"'") | .head.ref')"
+          if ! grep -qx "chore/bump-${VERSION}" <<<"$heads"; then
+            echo "::error::${GITHUB_SHA} was not merged from this repo's chore/bump-${VERSION} branch (found: ${heads:-none})" >&2
+            exit 1
+          fi
+
+      - name: Push release tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          existing="$(git ls-remote origin "refs/tags/v${VERSION}^{}" | cut -f1)"
+          if [ -z "$existing" ]; then
+            existing="$(git ls-remote origin "refs/tags/v${VERSION}" | cut -f1)"
+          fi
+          if [ -n "$existing" ]; then
+            if [ "$existing" != "$GITHUB_SHA" ]; then
+              echo "::error::v${VERSION} already exists on origin and points at ${existing}, not this commit (${GITHUB_SHA})" >&2
+              exit 1
+            fi
+            echo "v${VERSION} already exists on origin and points at this commit -- reusing it"
+          elif [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            git tag "v${VERSION}"
+            git push origin "v${VERSION}"
+          else
+            echo "::error::Refusing to create v${VERSION} from ${GITHUB_REF} -- release tags are only created from main" >&2
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          bash scripts/release-notes.sh "v${VERSION}" > "$RUNNER_TEMP/notes.md"
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            echo "v${VERSION} release already exists -- skipping"
+          else
+            gh release create "v${VERSION}" --title "v${VERSION}" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag
+          fi
+
+  crates:
+    name: crates.io
+    needs: tag-and-release
+    if: always() && needs.tag-and-release.result == 'success'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/publish-crates.yml # zizmor: ignore[self-repository] CI is pinned to zizmor v1.28.0, which predates $/ syntax support
+
+  announce:
+    name: Announce the release
+    needs: [tag-and-release, crates]
+    if: ${{ !cancelled() && needs.crates.result == 'success' }}
+    permissions: {}
+    uses: ZirekHQ/.github/.github/workflows/announce-release.yml@402ea18a978f5dbe0f34683b7dd49ab579862d41 # main
+    with:
+      tag: v${{ needs.tag-and-release.outputs.version }}
+    secrets:
+      MASTODON_INSTANCE_URL: ${{ secrets.MASTODON_INSTANCE_URL }}
+      MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+      BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+      BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}

@@ -1,0 +1,30 @@
+[package]
+name = "linsonic"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88.0"
+license = "Apache-2.0"
+description = "Safe Rust port of Sonic, the pitch-synchronous speech speed, pitch and volume changer"
+repository = "https://github.com/ZirekHQ/linsonic-rs"
+readme = "README.md"
+keywords = ["audio", "speech", "tts", "time-stretch", "sonic"]
+categories = ["multimedia::audio", "algorithms"]
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+
+[dev-dependencies]
+divan = "0.1.2"
+proptest = "1"
+
+[[bench]]
+name = "sonic"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

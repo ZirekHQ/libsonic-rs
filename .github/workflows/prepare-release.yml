@@ -1,0 +1,123 @@
+name: Prepare release
+
+# Proposes a release; merging the opened PR is what actually cuts one -- release.yml tags that
+# merge commit and triggers every downstream release workflow automatically.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only compute the release plan, do not open the version-bump PR"
+        type: boolean
+        required: false
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  authorize:
+    name: Authorize
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Require a maintainer on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.triggering_actor }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          if [ "$REF" != 'refs/heads/main' ]; then
+            echo "::error::Releases are prepared from main, not $REF"
+            exit 1
+          fi
+          role=$(gh api "repos/$REPO/collaborators/$ACTOR/permission" --jq .role_name)
+          case "$role" in
+            admin|maintain) echo "$ACTOR has role $role" ;;
+            *) echo "::error::$ACTOR has role '$role'; preparing a release needs admin or maintain"; exit 1 ;;
+          esac
+
+  prepare:
+    needs: authorize
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      APP_CLIENT_ID: ${{ secrets.AUTOMATION_APP_CLIENT_ID }}
+      APP_PRIVATE_KEY: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
+    steps:
+      - name: Create release app token
+        id: app-token
+        # A PR opened with GITHUB_TOKEN gets no CI, so it could never satisfy the required
+        # `build` check. Without the app secrets the PR is still opened, but needs a manual
+        # close/reopen to start its checks.
+        if: ${{ !inputs.dry_run && env.APP_CLIENT_ID != '' && env.APP_PRIVATE_KEY != '' }}
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.AUTOMATION_APP_CLIENT_ID }}
+          private-key: ${{ env.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          token: ${{ steps.app-token.outputs.token || github.token }}
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master
+        with:
+          toolchain: "1.99.0"
+
+      - name: Compute next version
+        id: next
+        run: |
+          set -uo pipefail
+          # exit 1 = normal "nothing release-worthy", treated as skip. Any
+          # other exit means the computation itself is broken and must fail
+          # loudly, or a broken tag state would silently suppress every future release.
+          # The `&& rc=0 || rc=$?` form keeps the default `bash -e` shell from aborting on exit 1.
+          version="$(bash scripts/next-version.sh)" && rc=0 || rc=$?
+          if [ "$rc" -eq 0 ]; then
+            echo "version=${version}" >> "$GITHUB_OUTPUT"
+            echo "### Release plan: v${version}" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$rc" -eq 1 ]; then
+            echo "::notice::Nothing release-worthy since the last tag -- skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "### Release plan: nothing to release" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::scripts/next-version.sh failed (exit ${rc})"
+            exit "$rc"
+          fi
+
+      - name: Bump version
+        if: steps.next.outputs.skip != 'true' && !inputs.dry_run
+        env:
+          VERSION: ${{ steps.next.outputs.version }}
+        run: bash scripts/bump-version.sh "$VERSION"
+
+      - name: Open release PR
+        if: steps.next.outputs.skip != 'true' && !inputs.dry_run
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+          VERSION: ${{ steps.next.outputs.version }}
+        run: |
+          set -euo pipefail
+          branch="chore/bump-${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add Cargo.toml Cargo.lock README.md
+          git commit -m "chore: bump version -> ${VERSION}"
+          git push -u origin "$branch"
+          gh pr create --title "chore: bump version -> ${VERSION}" \
+            --body "Computed by \`prepare-release.yml\` from Conventional Commit subjects since the last tag (see \`scripts/next-version.sh\`). **Merging this releases v${VERSION}**: \`release.yml\` tags this merge commit and publishes to crates.io and GitHub Releases. The required checks on this PR are the only gate." \
+            --base main --head "$branch"

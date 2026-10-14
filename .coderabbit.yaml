@@ -1,0 +1,17 @@
+reviews:
+  path_filters:
+    - "!target/**"
+    - "!tests/sonic_golden.tsv"
+
+  instructions: |
+    - This is linsonic, a safe Rust port of Bill Cox's Sonic (PICOLA-style speech speed, pitch and volume changer).
+    - Focus strictly on correctness, panic-safety and numeric faithfulness to sonic.c. Avoid nitpicking style.
+    - Flag any arithmetic that could overflow or divide by zero on reachable input; integer widths and f32/f64 intermediates are deliberate and must match the C reference.
+    - Flag any `unwrap()`/`expect()`/panic on reachable paths outside tests. The crate forbids `unsafe`; flag any attempt to add it.
+    - tests/sonic_golden.tsv is a frozen output contract generated from C; flag any change to it that is not accompanied by an explanation of the intended behavior change.
+
+  path_instructions:
+    - path: "{.github/workflows/**,deny.toml}"
+      instructions: |
+        - Flag workflow changes that weaken pinned actions, widen permissions, or drop a platform from the test matrix.
+        - deny.toml enforces license policy; flag any widening without an explanatory comment.
