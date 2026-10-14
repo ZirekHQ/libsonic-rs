@@ -99,10 +99,21 @@ jobs:
       id-token: write
     uses: ./.github/workflows/publish-crates.yaml # zizmor: ignore[self-repository] CI is pinned to zizmor v1.28.0, which predates $/ syntax support
 
+  python:
+    name: PyPI
+    needs: tag-and-release
+    if: always() && needs.tag-and-release.result == 'success'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/publish-python.yaml # zizmor: ignore[self-repository] CI is pinned to zizmor v1.28.0, which predates $/ syntax support
+    with:
+      tag: v${{ needs.tag-and-release.outputs.version }}
+
   announce:
     name: Announce the release
-    needs: [tag-and-release, crates]
-    if: ${{ !cancelled() && needs.crates.result == 'success' }}
+    needs: [tag-and-release, crates, python]
+    if: ${{ !cancelled() && needs.crates.result == 'success' && needs.python.result == 'success' }}
     permissions: {}
     uses: ZirekHQ/.github/.github/workflows/announce-release.yml@402ea18a978f5dbe0f34683b7dd49ab579862d41 # main
     with:

@@ -27,9 +27,10 @@ grep -qxF "version = \"${new_version}\"" Cargo.toml || {
   exit 1
 }
 
+sed -i.bak "s/^version = \"${old_version}\"/version = \"${new_version}\"/" python/Cargo.toml
 sed -i.bak "s/libsonic = \"${old_version%.*}\"/libsonic = \"${new_version%.*}\"/" README.md
-rm -f README.md.bak
+rm -f README.md.bak python/Cargo.toml.bak
 
 cargo check --quiet
 echo "Bumped ${old_version} -> ${new_version}"
-git diff --stat -- Cargo.toml Cargo.lock README.md
+git diff --stat -- Cargo.toml Cargo.lock README.md python/Cargo.toml

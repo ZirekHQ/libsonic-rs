@@ -1,3 +1,8 @@
+[workspace]
+members = [".", "python"]
+default-members = ["."]
+resolver = "2"
+
 [package]
 name = "libsonic"
 version = "0.1.0"
