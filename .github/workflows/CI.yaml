@@ -46,7 +46,7 @@ jobs:
         run: cargo test --locked --no-fail-fast
 
   lint:
-    uses: ./.github/workflows/rust-lint.yml # zizmor: ignore[self-repository] CI is pinned to zizmor v1.28.0, which predates $/ syntax support
+    uses: ./.github/workflows/rust-lint.yaml # zizmor: ignore[self-repository] CI is pinned to zizmor v1.28.0, which predates $/ syntax support
     permissions:
       contents: read
       issues: write

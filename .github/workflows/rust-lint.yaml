@@ -40,7 +40,7 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
-    # A new advisory against an unrelated dependency must not block merges; audit.yml
+    # A new advisory against an unrelated dependency must not block merges; audit.yaml
     # raises it as an issue on its daily run.
     continue-on-error: true
     timeout-minutes: 15
