@@ -2,6 +2,10 @@
 
 Python bindings for [libsonic](https://github.com/ZirekHQ/libsonic-rs), a safe Rust port of Sonic.
 
+```sh
+pip install libsonic
+```
+
 ```python
 from libsonic import SonicStream
 
