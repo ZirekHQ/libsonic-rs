@@ -159,16 +159,19 @@ impl SonicStream {
         })
     }
 
+    /// Sets the playback speed, clamped to 0.05..=20.0; NaN maps to the minimum.
     pub fn set_speed(&mut self, speed: f32) {
         self.speed = clamp(speed, MIN_SPEED, MAX_SPEED);
     }
 
+    /// Sets the pitch multiplier, clamped to 0.05..=20.0, and restarts rate-conversion positions.
     pub fn set_pitch(&mut self, pitch: f32) {
         self.pitch = clamp(pitch, MIN_PITCH_SETTING, MAX_PITCH_SETTING);
         self.old_rate_position = 0;
         self.new_rate_position = 0;
     }
 
+    /// Sets the volume multiplier, clamped to 0.01..=100.0.
     pub fn set_volume(&mut self, volume: f32) {
         self.volume = clamp(volume, MIN_VOLUME, MAX_VOLUME);
     }
@@ -205,6 +208,7 @@ impl SonicStream {
         self.pitch_buffer.clear();
     }
 
+    /// Frames ready to be read with [`SonicStream::read_f32`].
     pub fn available_frames(&self) -> usize {
         self.output_frames()
     }
