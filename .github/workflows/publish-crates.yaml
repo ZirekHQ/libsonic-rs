@@ -50,13 +50,14 @@ jobs:
         uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
 
       - name: Resolve workspace version
-        # Read from [workspace.package] rather than hardcoding the version here,
+        # Read from [package] rather than hardcoding the version here,
         # so this file doesn't silently go stale (and publish the wrong version)
         # the next time the workspace version bumps.
         id: version
         run: |
           set -euo pipefail
-          version="$(awk '/^\[workspace\.package\]/{f=1;next} /^\[/{f=0} f && /^version = /{gsub(/version = "|"/,""); print; exit}' Cargo.toml)"
+          version="$(awk '/^\[package\]/{f=1;next} /^\[/{f=0} f && /^version = /{gsub(/version = "|"/,""); print; exit}' Cargo.toml)"
+          [ -n "$version" ] || { echo "::error::No [package].version in Cargo.toml" >&2; exit 1; }
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: publish libsonic
