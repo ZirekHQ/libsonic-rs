@@ -20,6 +20,12 @@ elif [ "$rc" -ne 0 ]; then
   exit "$rc"
 fi
 
+status="$(curl -s -o /dev/null -w '%{http_code}' -A 'ZirekHQ-ci' "https://crates.io/api/v1/crates/${package}")"
+if [ "$status" = "404" ]; then
+  echo "::notice::${package} is not on crates.io yet -- skipping semver check until the first release"
+  exit 0
+fi
+
 case "$next" in
   *.0.0) release_type="major" ;;
   *.0) release_type="minor" ;;
