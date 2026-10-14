@@ -34,3 +34,7 @@ cargo bench
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+## Python
+
+`pip install libsonic` installs the same stream API as a prebuilt wheel; see [`python/README.md`](python/README.md).

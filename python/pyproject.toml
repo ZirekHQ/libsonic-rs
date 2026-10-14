@@ -1,0 +1,19 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "libsonic"
+requires-python = ">=3.11"
+description = "Pitch-synchronous speech speed, pitch and volume changer, a Rust port of Sonic"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Multimedia :: Sound/Audio",
+]
+dynamic = ["version"]
+
+[tool.maturin]
+features = ["extension-module"]

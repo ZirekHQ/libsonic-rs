@@ -1,0 +1,23 @@
+[package]
+name = "libsonic-python"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88.0"
+license = "Apache-2.0"
+description = "Python bindings for libsonic"
+repository = "https://github.com/ZirekHQ/libsonic-rs"
+publish = false
+
+[lib]
+name = "libsonic"
+crate-type = ["cdylib"]
+
+[features]
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+sonic = { package = "libsonic", path = ".." }
+
+[dependencies.pyo3]
+version = "0.29"
+features = ["abi3-py311"]
