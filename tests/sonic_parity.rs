@@ -12,7 +12,7 @@ fn golden_path() -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/sonic_golden.tsv")
 }
 
-// Goldens were generated from sonic.c (dengjen-tts commit 4890b48, run_c harness against dengjen-sonic-sys 5465339^).
+// Goldens come from sonic.c (dengjen-sonic-sys 5465339^ sources) fed the inputs from common::signal, which uses no libm so hashes match on every platform.
 fn golden_for<'a>(
     m: &std::collections::HashMap<&str, (usize, &'a str)>,
     id: &str,

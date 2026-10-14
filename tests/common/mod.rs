@@ -20,6 +20,18 @@ impl Case {
     }
 }
 
+/// Sine from IEEE-754 basic operations only, so inputs are bit-identical on every platform.
+fn det_sin(x: f32) -> f32 {
+    let tau = 2.0 * std::f32::consts::PI;
+    let pi = std::f32::consts::PI;
+    let mut r = x - tau * (x / tau + 0.5).floor();
+    if r > pi {
+        r -= tau;
+    }
+    let y = 1.273_239_5 * r - 0.405_284_73 * r * r.abs();
+    0.225 * (y * y.abs() - y) + y
+}
+
 pub fn signal(sample_rate: u32, channels: u32, frames: usize) -> Vec<f32> {
     let mut state: u32 = 0x2545_F491;
     let mut next_noise = move || {
@@ -31,11 +43,11 @@ pub fn signal(sample_rate: u32, channels: u32, frames: usize) -> Vec<f32> {
     let mut out = Vec::with_capacity(frames * channels as usize);
     for n in 0..frames {
         let t = n as f32 / rate;
-        let f0 = 140.0 + 25.0 * (tau * 3.0 * t).sin();
+        let f0 = 140.0 + 25.0 * det_sin(tau * 3.0 * t);
         let phase = tau * f0 * t;
-        let envelope = 0.5 + 0.4 * (tau * 4.0 * t).sin();
-        let voiced =
-            envelope * (0.6 * phase.sin() + 0.25 * (2.0 * phase).sin() + 0.1 * (3.0 * phase).sin());
+        let envelope = 0.5 + 0.4 * det_sin(tau * 4.0 * t);
+        let voiced = envelope
+            * (0.6 * det_sin(phase) + 0.25 * det_sin(2.0 * phase) + 0.1 * det_sin(3.0 * phase));
         for ch in 0..channels {
             out.push((voiced * (1.0 - 0.1 * ch as f32) + next_noise()).clamp(-0.95, 0.95));
         }
