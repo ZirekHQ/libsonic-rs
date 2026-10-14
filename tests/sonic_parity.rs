@@ -1,7 +1,7 @@
 mod common;
 
 use common::{matrix, run_rust, signal};
-use linsonic::SonicStream;
+use libsonic::SonicStream;
 use proptest::prelude::*;
 
 const SPEEDS: [f32; 7] = [0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.5];

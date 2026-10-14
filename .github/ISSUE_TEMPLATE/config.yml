@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Usage help
-    url: https://github.com/ZirekHQ/linsonic-rs/blob/main/README.md
+    url: https://github.com/ZirekHQ/libsonic-rs/blob/main/README.md
     about: Start here for usage and the supported parameter ranges.

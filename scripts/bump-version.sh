@@ -27,7 +27,7 @@ grep -qxF "version = \"${new_version}\"" Cargo.toml || {
   exit 1
 }
 
-sed -i.bak "s/linsonic = \"${old_version%.*}\"/linsonic = \"${new_version%.*}\"/" README.md
+sed -i.bak "s/libsonic = \"${old_version%.*}\"/libsonic = \"${new_version%.*}\"/" README.md
 rm -f README.md.bak
 
 cargo check --quiet

@@ -128,5 +128,5 @@ jobs:
       - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
         with:
           tool: cargo-semver-checks
-      - name: cargo semver-checks (linsonic)
-        run: bash .github/scripts/semver-check.sh linsonic
+      - name: cargo semver-checks (libsonic)
+        run: bash .github/scripts/semver-check.sh libsonic

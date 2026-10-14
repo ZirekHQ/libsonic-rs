@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use linsonic::SonicStream;
+use libsonic::SonicStream;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Case {
