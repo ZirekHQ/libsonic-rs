@@ -1,11 +1,11 @@
 [package]
-name = "linsonic"
+name = "libsonic"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88.0"
 license = "Apache-2.0"
 description = "Safe Rust port of Sonic, the pitch-synchronous speech speed, pitch and volume changer"
-repository = "https://github.com/ZirekHQ/linsonic-rs"
+repository = "https://github.com/ZirekHQ/libsonic-rs"
 readme = "README.md"
 keywords = ["audio", "speech", "tts", "time-stretch", "sonic"]
 categories = ["multimedia::audio", "algorithms"]

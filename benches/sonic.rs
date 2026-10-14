@@ -11,7 +11,7 @@ fn speech_like(frames: usize) -> Vec<f32> {
 }
 
 fn run_sonic(speed: f32, pitch: f32, input: &[f32]) -> usize {
-    let mut stream = linsonic::SonicStream::new(22_050, 1).expect("valid sonic dimensions");
+    let mut stream = libsonic::SonicStream::new(22_050, 1).expect("valid sonic dimensions");
     stream.set_speed(speed);
     stream.set_pitch(pitch);
     stream.write_f32(input);

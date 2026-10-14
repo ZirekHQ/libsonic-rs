@@ -4,7 +4,7 @@ reviews:
     - "!tests/sonic_golden.tsv"
 
   instructions: |
-    - This is linsonic, a safe Rust port of Bill Cox's Sonic (PICOLA-style speech speed, pitch and volume changer).
+    - This is libsonic, a safe Rust port of Bill Cox's Sonic (PICOLA-style speech speed, pitch and volume changer).
     - Focus strictly on correctness, panic-safety and numeric faithfulness to sonic.c. Avoid nitpicking style.
     - Flag any arithmetic that could overflow or divide by zero on reachable input; integer widths and f32/f64 intermediates are deliberate and must match the C reference.
     - Flag any `unwrap()`/`expect()`/panic on reachable paths outside tests. The crate forbids `unsafe`; flag any attempt to add it.

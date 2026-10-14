@@ -1,14 +1,14 @@
-# linsonic
+# libsonic
 
 Safe Rust port of [Sonic](https://github.com/waywardgeek/sonic), the pitch-synchronous speech speed, pitch and volume changer by Bill Cox. No `unsafe`, no C toolchain, no dependencies.
 
 ```toml
 [dependencies]
-linsonic = "0.1"
+libsonic = "0.1"
 ```
 
 ```rust
-use linsonic::SonicStream;
+use libsonic::SonicStream;
 
 let mut stream = SonicStream::new(22_050, 1)?;
 stream.set_speed(1.5);

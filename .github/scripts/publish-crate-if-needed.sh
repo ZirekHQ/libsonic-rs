@@ -13,7 +13,7 @@ crate="${1:?usage: publish-crate-if-needed.sh <crate-name> <version>}"
 version="${2:?usage: publish-crate-if-needed.sh <crate-name> <version>}"
 
 status="$(curl -s -o /dev/null -w '%{http_code}' \
-  -H "User-Agent: linsonic-publish-ci (https://github.com/ZirekHQ/linsonic-rs)" \
+  -H "User-Agent: libsonic-publish-ci (https://github.com/ZirekHQ/libsonic-rs)" \
   "https://crates.io/api/v1/crates/${crate}/${version}")"
 
 case "$status" in
