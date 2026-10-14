@@ -1,6 +1,6 @@
 name: Prepare release
 
-# Proposes a release; merging the opened PR is what actually cuts one -- release.yml tags that
+# Proposes a release; merging the opened PR is what actually cuts one -- release.yaml tags that
 # merge commit and triggers every downstream release workflow automatically.
 on:
   workflow_dispatch:
@@ -119,5 +119,5 @@ jobs:
           git commit -m "chore: bump version -> ${VERSION}"
           git push -u origin "$branch"
           gh pr create --title "chore: bump version -> ${VERSION}" \
-            --body "Computed by \`prepare-release.yml\` from Conventional Commit subjects since the last tag (see \`scripts/next-version.sh\`). **Merging this releases v${VERSION}**: \`release.yml\` tags this merge commit and publishes to crates.io and GitHub Releases. The required checks on this PR are the only gate." \
+            --body "Computed by \`prepare-release.yaml\` from Conventional Commit subjects since the last tag (see \`scripts/next-version.sh\`). **Merging this releases v${VERSION}**: \`release.yaml\` tags this merge commit and publishes to crates.io and GitHub Releases. The required checks on this PR are the only gate." \
             --base main --head "$branch"

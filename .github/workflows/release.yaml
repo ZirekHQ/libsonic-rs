@@ -1,6 +1,6 @@
 name: Release
 
-# Only acts on the commit landing prepare-release.yml's version-bump PR (matched by its exact
+# Only acts on the commit landing prepare-release.yaml's version-bump PR (matched by its exact
 # commit subject). Every other push to main is a no-op here.
 on:
   push:
@@ -97,7 +97,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ./.github/workflows/publish-crates.yml # zizmor: ignore[self-repository] CI is pinned to zizmor v1.28.0, which predates $/ syntax support
+    uses: ./.github/workflows/publish-crates.yaml # zizmor: ignore[self-repository] CI is pinned to zizmor v1.28.0, which predates $/ syntax support
 
   announce:
     name: Announce the release
