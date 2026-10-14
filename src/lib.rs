@@ -181,8 +181,11 @@ impl SonicStream {
     pub fn write_f32(&mut self, samples: &[f32]) {
         let frames = samples.len() / self.channels;
         let whole = frames * self.channels;
-        self.input
-            .extend(samples[..whole].iter().map(|&s| (s * 32767.0) as i16));
+        self.input.extend(
+            samples[..whole]
+                .iter()
+                .map(|&s| (s.clamp(-1.0, 1.0) * 32767.0) as i16),
+        );
         let speed = self.speed / self.pitch;
         self.input_play_time += frames as f32 * self.sample_period / speed;
         self.process_stream_input();
@@ -305,22 +308,12 @@ impl SonicStream {
         let right = (self.old_rate_position + 1) * new_rate;
         let ratio = right - position - 1;
         let width = right - left;
-        let mut total = 0i32;
-        let mut overflow_count = 0i32;
+        let mut total = 0i64;
         for i in 0..SINC_FILTER_POINTS {
             let weight = find_sinc_coefficient(i as i32, ratio, width);
-            let value = i32::from(input[i * self.channels]) * weight;
-            let old_sign = sign(total);
-            total = total.wrapping_add(value);
-            if old_sign != sign(total) && sign(value) == old_sign {
-                overflow_count += old_sign;
-            }
+            total += i64::from(input[i * self.channels]) * i64::from(weight);
         }
-        match overflow_count.signum() {
-            1 => i16::MAX,
-            -1 => i16::MIN,
-            _ => (total >> 16) as i16,
-        }
+        (total >> 16).clamp(i64::from(i16::MIN), i64::from(i16::MAX)) as i16
     }
 
     fn change_speed(&mut self, speed: f32) {
@@ -409,7 +402,8 @@ impl SonicStream {
             (period as f32 * speed / (1.0 - speed)) as usize
         } else {
             period
-        };
+        }
+        .max(1);
         let ch = self.channels;
         let samples = &self.input[position * ch..];
         self.output.extend_from_slice(&samples[..period * ch]);
@@ -579,14 +573,6 @@ fn find_sinc_coefficient(i: i32, ratio: i32, width: i32) -> i32 {
     ((left_val * (width - position) + right_val * position) * 2) / width
 }
 
-fn sign(value: i32) -> i32 {
-    if value >= 0 {
-        1
-    } else {
-        -1
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -623,11 +609,11 @@ mod tests {
     }
 
     #[test]
-    fn out_of_range_float_input_saturates() {
+    fn out_of_range_float_input_clamps_to_full_scale() {
         let mut stream = SonicStream::new(22_050, 1).unwrap();
         stream.write_f32(&[2.0, -2.0, f32::NAN, f32::INFINITY]);
         let converted: Vec<i16> = stream.output.clone();
-        assert_eq!(converted, vec![i16::MAX, i16::MIN, 0, i16::MAX]);
+        assert_eq!(converted, vec![i16::MAX, -i16::MAX, 0, i16::MAX]);
     }
 
     #[test]

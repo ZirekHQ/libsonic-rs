@@ -5,14 +5,14 @@ use libsonic::SonicStream;
 use proptest::prelude::*;
 
 const SPEEDS: [f32; 7] = [0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.5];
-const PITCHES: [f32; 4] = [0.5, 1.0, 1.25, 1.5];
-const VOLUMES: [f32; 3] = [0.25, 0.5, 1.0];
+const PITCHES: [f32; 5] = [0.5, 1.0, 1.25, 1.5, 2.0];
+const VOLUMES: [f32; 4] = [0.01, 0.25, 1.0, 2.0];
 
 fn golden_path() -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/sonic_golden.tsv")
 }
 
-// Goldens come from sonic.c (dengjen-sonic-sys 5465339^ sources) fed the inputs from common::signal, which uses no libm so hashes match on every platform.
+// Goldens come from dengjen-sonic's sonic.c on `develop`, fed the inputs `dump_inputs` writes; common::signal uses no libm so hashes match on every platform.
 fn golden_for<'a>(
     m: &std::collections::HashMap<&str, (usize, &'a str)>,
     id: &str,
@@ -56,6 +56,37 @@ fn golden_matches_rust() {
             "hash for {id}"
         );
     }
+}
+
+#[test]
+#[ignore = "writes the C driver's input file; set LIBSONIC_DUMP to the output path"]
+fn dump_inputs() {
+    let path = std::env::var("LIBSONIC_DUMP").expect("LIBSONIC_DUMP set");
+    let mut out = Vec::new();
+    let mut emit = |id: &str, case: &common::Case, input: &[f32]| {
+        out.extend((id.len() as u32).to_le_bytes());
+        out.extend(id.as_bytes());
+        for v in [case.sample_rate, case.channels] {
+            out.extend(v.to_le_bytes());
+        }
+        for v in [case.speed, case.pitch, case.volume] {
+            out.extend(v.to_le_bytes());
+        }
+        out.extend((input.len() as u32).to_le_bytes());
+        out.extend(input.iter().flat_map(|s| s.to_le_bytes()));
+    };
+    for case in matrix(&SPEEDS, &PITCHES, &VOLUMES) {
+        let n = case.sample_rate as usize / 2;
+        emit(
+            &case.id(),
+            &case,
+            &signal(case.sample_rate, case.channels, n),
+        );
+    }
+    for (id, case, input) in common::edge_cases() {
+        emit(&id, &case, &input);
+    }
+    std::fs::write(path, out).expect("write inputs");
 }
 
 proptest! {

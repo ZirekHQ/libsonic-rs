@@ -114,6 +114,20 @@ pub fn edge_cases() -> Vec<(String, Case, Vec<f32>)> {
     let mut partial = signal(stereo.sample_rate, 2, 5000);
     partial.push(0.25);
     cases.push(("edge-partial-frame".to_string(), stereo, partial));
+    let loud: Vec<f32> = signal(base.sample_rate, 1, 3000)
+        .iter()
+        .map(|s| s * 4.0)
+        .collect();
+    cases.push(("edge-over-range".to_string(), base, loud));
+    let slow = Case {
+        speed: 0.05,
+        ..base
+    };
+    cases.push((
+        "edge-extreme-slow".to_string(),
+        slow,
+        signal(base.sample_rate, 1, 3 * window),
+    ));
     cases
 }
 
