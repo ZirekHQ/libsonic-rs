@@ -19,5 +19,5 @@ extension-module = ["pyo3/extension-module"]
 sonic = { package = "libsonic", path = ".." }
 
 [dependencies.pyo3]
-version = "0.29"
+version = "0.30"
 features = ["abi3-py311"]
