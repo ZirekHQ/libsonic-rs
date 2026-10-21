@@ -115,7 +115,7 @@ jobs:
     needs: [tag-and-release, crates, python]
     if: ${{ !cancelled() && needs.crates.result == 'success' && needs.python.result == 'success' }}
     permissions: {}
-    uses: ZirekHQ/.github/.github/workflows/announce-release.yaml@17345d25b0126826cc501997a2927677779bf791 # main
+    uses: ZirekHQ/.github/.github/workflows/announce-release.yaml@aeeb653e77286d2bc445c6a34c0125acc6c60b6c # main
     with:
       tag: v${{ needs.tag-and-release.outputs.version }}
     secrets:
