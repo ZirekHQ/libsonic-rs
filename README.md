@@ -31,6 +31,14 @@ cargo test
 cargo bench
 ```
 
+## 💝 Support This Project
+
+If this repository saves you time and effort, please consider supporting it!
+
+- ⭐ [Star on GitHub](https://github.com/ZirekHQ/libsonic-rs)
+- 🐦 [Share on Twitter](https://twitter.com/intent/tweet?text=libsonic%20-%20safe%20Rust%20port%20of%20Sonic%2C%20the%20speech%20speed%20and%20pitch%20changer&url=https%3A%2F%2Fgithub.com%2FZirekHQ%2Flibsonic-rs)
+- 💖 [Support on Open Collective](https://opencollective.com/zirek)
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
